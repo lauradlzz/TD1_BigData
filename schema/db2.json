@@ -1,0 +1,65 @@
+{
+  "Product": {
+    "IDP": "Integer",
+    "name": "String",
+
+    "price": {
+      "amount": "Integer",
+      "currency": "String",
+      "vat": "Integer"
+    },
+
+    "brand": "String",
+    "description": "LongString",
+    "image_url": "String",
+
+    "Categories": [
+      {
+        "title": "String"
+      }
+    ],
+
+    "Supplier": {
+      "IDS": "Integer",
+      "name": "String",
+      "SIRET": "String",
+      "headOffice": "String",
+      "Revenue": "Integer"
+    },
+
+    "Stock": [
+      {
+        "IDP": "Integer",
+        "IDW": "Integer",
+        "quantity": "Integer",
+        "location": "String"
+      }
+    ]
+  },
+
+  "Warehouse": {
+    "IDW": "Integer",
+    "address": "String",
+    "capacity": "Integer"
+  },
+
+  "OrderLine": {
+    "IDC": "Integer",
+    "IDP": "Integer",
+    "date": "Date",
+    "quantity": "Integer",
+    "deliveryDate": "Date",
+    "comment": "LongString",
+    "grade": "Integer"
+  },
+
+  "Client": {
+    "IDC": "Integer",
+    "ln": "String",
+    "fn": "String",
+    "address": "String",
+    "nationality": "String",
+    "birthDate": "Date",
+    "email": "String"
+  }
+}
