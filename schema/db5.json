@@ -1,65 +1,220 @@
 {
-  "Product": {
-    "IDP": "Integer",
-    "name": "String",
-
-    "price": {
-      "amount": "Integer",
-      "currency": "String",
-      "vat": "Integer"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DB5",
+  "type": "object",
+  "properties": {
+    "Product": {
+      "type": "object",
+      "properties": {
+        "IDP": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string"
+            },
+            "vat": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "amount",
+            "currency",
+            "vat"
+          ]
+        },
+        "brand": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "format": "longstring"
+        },
+        "image_url": {
+          "type": "string"
+        },
+        "Categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title"
+            ]
+          }
+        },
+        "Supplier": {
+          "type": "object",
+          "properties": {
+            "IDS": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "SIRET": {
+              "type": "string"
+            },
+            "headOffice": {
+              "type": "string"
+            },
+            "Revenue": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "IDS",
+            "name",
+            "SIRET",
+            "headOffice",
+            "Revenue"
+          ]
+        },
+        "OrderLine": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "IDC": {
+                "type": "integer"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "quantity": {
+                "type": "integer"
+              },
+              "deliveryDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "comment": {
+                "type": "string",
+                "format": "longstring"
+              },
+              "grade": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "IDC",
+              "date",
+              "quantity",
+              "deliveryDate",
+              "comment",
+              "grade"
+            ]
+          }
+        }
+      },
+      "required": [
+        "IDP",
+        "name",
+        "price",
+        "brand",
+        "description",
+        "image_url",
+        "Categories",
+        "Supplier",
+        "OrderLine"
+      ]
     },
-
-    "brand": "String",
-    "description": "LongString",
-    "image_url": "String",
-
-    "Categories": [
-      {
-        "title": "String"
-      }
-    ],
-
-    "Supplier": {
-      "IDS": "Integer",
-      "name": "String",
-      "SIRET": "String",
-      "headOffice": "String",
-      "Revenue": "Integer"
+    "Stock": {
+      "type": "object",
+      "properties": {
+        "IDP": {
+          "type": "integer"
+        },
+        "IDW": {
+          "type": "integer"
+        },
+        "quantity": {
+          "type": "integer"
+        },
+        "location": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "IDP",
+        "IDW",
+        "quantity",
+        "location"
+      ]
     },
-
-    "OrderLine": [
-      {
-        "IDC": "Integer",
-        "IDP": "Integer",
-        "date": "Date",
-        "quantity": "Integer",
-        "deliveryDate": "Date",
-        "comment": "LongString",
-        "grade": "Integer"
-      }
-    ]
+    "Warehouse": {
+      "type": "object",
+      "properties": {
+        "IDW": {
+          "type": "integer"
+        },
+        "address": {
+          "type": "string"
+        },
+        "capacity": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "IDW",
+        "address",
+        "capacity"
+      ]
+    },
+    "Client": {
+      "type": "object",
+      "properties": {
+        "IDC": {
+          "type": "integer"
+        },
+        "ln": {
+          "type": "string"
+        },
+        "fn": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "nationality": {
+          "type": "string"
+        },
+        "birthDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "IDC",
+        "ln",
+        "fn",
+        "address",
+        "nationality",
+        "birthDate",
+        "email"
+      ]
+    }
   },
-
-  "Stock": {
-    "IDP": "Integer",
-    "IDW": "Integer",
-    "quantity": "Integer",
-    "location": "String"
-  },
-
-  "Warehouse": {
-    "IDW": "Integer",
-    "address": "String",
-    "capacity": "Integer"
-  },
-
-  "Client": {
-    "IDC": "Integer",
-    "ln": "String",
-    "fn": "String",
-    "address": "String",
-    "nationality": "String",
-    "birthDate": "Date",
-    "email": "String"
-  }
+  "required": [
+    "Product",
+    "Stock",
+    "Warehouse",
+    "Client"
+  ]
 }

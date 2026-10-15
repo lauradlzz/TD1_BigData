@@ -1,0 +1,20 @@
+{
+  "servers": 1000,
+  "nb_docs": {
+    "Client": 10000000,
+    "Product": 100000,
+    "OrderLine": 4000000000,
+    "Warehouse": 200,
+    "Stock": 20000000
+  },
+  "distinct_values": {
+    "IDC": 10000000,
+    "IDP": 100000,
+    "IDW": 200,
+    "brand": 5000,
+    "date": 365
+  },
+  "array_lengths": {
+    "Categories": 2
+  }
+}
