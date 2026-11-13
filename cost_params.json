@@ -1,0 +1,8 @@
+{
+  "bandwidth_network": 100000000,
+  "bandwidth_ram": 25000000000,
+  "index_size": 1000000,
+  "co2_network": 0.011,
+  "co2_ram": 0.028,
+  "external_fees": 0.011
+}

@@ -1,21 +1,27 @@
-# TD1_BigData — Homework 2.7
+# TD1_BigData — Homework 2.7 et 3.3
 
 Package Python (sans dépendance) qui prend un **JSON Schema** et des **statistiques** en entrée,
-construit un objet `Database`, puis calcule les tailles et la distribution par sharding.
+construit un objet `Database`, calcule les tailles et la distribution par sharding (2.7),
+puis estime le coût des requêtes de filtre et de jointure (3.3).
 
 ## Fichiers
 
 | Fichier | Rôle |
 |---|---|
 | `bigdata_sim/model.py` | Classes `Field` / `Collection` / `Database`, chargement, tailles, sharding |
+| `bigdata_sim/costs.py` | Fonctions de coût du cours : volumes réseau / RAM, temps, CO2, prix |
+| `bigdata_sim/operators.py` | Opérateurs : filtre et nested loop, avec / sans sharding |
 | `schema/db1.json` … `db5.json` | JSON Schemas des 5 dénormalisations |
 | `stats.json` | Statistiques de la section 2.2 |
+| `cost_params.json` | Constantes du modèle de coût (slides du cours) |
 | `main.py` | Affiche les réponses 2.5 et 2.6 pour DB1 à DB5 |
-| `test_bigdata_sim.py` | Tests avec valeurs calculées à la main |
-| `demo.ipynb` | Démonstration pas à pas (calculs à la main vérifiés par `assert`, graphique, tests) |
+| `queries.py` | Affiche le tableau des coûts de Q1 à Q5 pour DB1 à DB5 (3.1 et 3.2) |
+| `test_bigdata_sim.py`, `test_operators.py` | Tests avec valeurs calculées à la main |
+| `demo.ipynb` | Démonstration pas à pas (calculs à la main vérifiés par `assert`, graphiques, tests) |
 
 ```
 python main.py
+python queries.py
 python -m unittest
 ```
 
@@ -84,3 +90,73 @@ Dans les documents imbriqués, l'identifiant redondant avec le parent est suppri
 | OL - #IDP | 1 000 | 4 000 000 | 100 |
 | Prod - #IDP | 1 000 | 100 | 100 |
 | Prod - #brand | 1 000 | 100 | 5 |
+
+---
+
+# Homework 3.3 — Coût des requêtes
+
+## Utilisation
+
+```python
+from bigdata_sim import (load_database, load_cost_params, filter_with_sharding,
+                         filter_without_sharding, nested_loop_with_sharding)
+
+db = load_database("schema/db1.json", "stats.json")
+params = load_cost_params("cost_params.json")
+
+# Q1 : filtre sur la clé de sharding (St #IDP)
+r = filter_with_sharding(db, "Stock", ["IDP", "IDW"], ["quantity", "location"], params)
+r["nb_res"], r["size_res"], r["time"], r["co2"], r["price"]
+
+# Q5 : filtre sur Product puis, pour chaque produit, recherche de ses stocks
+outer = filter_with_sharding(db, "Product", ["brand"], ["IDP", "name", "price"], params,
+                             selectivity={"brand": 50 / 100000})
+r = nested_loop_with_sharding(db, outer, "Stock", "IDP", ["IDW", "quantity"], params)
+```
+
+Chaque opérateur renvoie un dictionnaire : `S`, `nb_res`, `size_msg`, `size_res`, `nb_docs_read`,
+`vol_network`, `vol_ram_max`, `vol_ram_total`, `time` (s), `co2` (kg CO2-eq), `price` (€).
+
+## Paramètres (`cost_params.json`)
+
+| Clé | Valeur | Source |
+|---|---|---|
+| `bandwidth_network` | 100 MB/s | slide 91 (et slide 110 : RAM = 250 × réseau) |
+| `bandwidth_ram` | 25 GB/s | slide 91 |
+| `index_size` | 1 MB | slide 96 (index secondaire local) |
+| `co2_network` | 0,011 kg CO2-eq / GB | slide 108 |
+| `co2_ram` | 0,028 kg CO2-eq / GB | slide 108 |
+| `external_fees` | 0,011 € / GB | slide 107 |
+
+## Formules
+
+Variables d'une requête :
+- `S` : nombre de serveurs contactés = 1 si le filtre porte sur la clé de sharding, sinon 1 000 (slide 93)
+- `size_query` : taille des clés du WHERE (12 B + valeur chacune)
+- `size_msg` : taille des clés du SELECT (12 B + valeur chacune)
+- `size_doc` : taille d'un document complet (TD1)
+- sélectivité d'une clé = 1 / nb valeurs distinctes (ou valeur donnée, ex. Apple = 50 / 10^5) ;
+  plusieurs clés (AND) : on multiplie
+- `nb_res` = sélectivité × nb lignes (nb lignes = nb éléments du tableau si on renvoie des clés d'un tableau imbriqué)
+
+Filtre (slides 92, 96) :
+- `vol_network = S × size_query + nb_res × size_msg`
+- `vol_RAM(serveur) = index + documents lus par le serveur × size_doc` (sans index : tous ses documents)
+
+Nested loop (slide 94) : `coût = C1' + |C1'| × C2'` (pour chaque résultat de C1, une recherche dans C2).
+"Avec sharding" = C2 est shardée sur la clé de jointure (1 serveur par recherche).
+
+Coûts (slides 106 à 109) :
+- temps = `vol_network / bandwidth_network + max(vol_RAM) / bandwidth_ram` (serveurs en parallèle)
+- CO2 = `vol_network × co2_network + somme(vol_RAM) × co2_ram` (en GB)
+- prix = `vol_network × external_fees` (le prix des serveurs est un coût fixe mensuel, pas par requête)
+
+## Hypothèses
+
+- `size_query` / `size_msg` = clés du WHERE / du SELECT : la slide 96 donne la formule mais pas leur contenu.
+- Index de 1 MB lu sur **chaque** serveur contacté (et à chaque recherche d'un nested loop).
+- Filtre sur une clé dans un tableau (ex. DB5 Q3, `date` dans `Product.OrderLine[]`) : il ne réduit
+  pas le nombre de documents lus (chaque produit a ~110 commandes par jour), seulement les résultats.
+- On ne peut pas sharder sur une clé contenue dans un tableau.
+- DB3 et DB4 n'ont pas de collection Product : Q2, Q4 et Q5 renvoient des doublons
+  (le produit est recopié dans chaque stock / commande), dédoublonnés côté application.
